@@ -7,15 +7,16 @@ import math
 
 # Set page configuration
 st.set_page_config(
-    page_title="Dynamical System Visualizer",
+    page_title="Simone Attractor Visualizer",
     page_icon="🌀",
     layout="wide"
 )
 
 # Title and description
-st.title("🌀 Interactive Dynamical System Visualizer")
+st.title("🌀 Simone Attractor Visualizer")
 st.markdown("""
-This application visualizes the following dynamical system:
+This application visualizes the **Simone attractor**, a dynamical system inspired by Simone Conradi.
+The system is defined by the following equations:
 """)
 
 # Display the mathematical equations
@@ -404,10 +405,29 @@ except Exception as e:
     st.error(f"An error occurred while computing the curve evolution: {str(e)}")
     st.info("Try adjusting the parameters, curve settings, or reducing the number of iterations.")
 
+# Citation and Credits
+st.markdown("---")
+st.markdown("### References & Credits")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.markdown("""
+    **Simone Attractor**  
+    Inspired by Simone Conradi  
+    Reference: [Paul Bourke - Simone Orbits](https://paulbourke.net/fractals/simone_orbits/)
+    """)
+
+with col2:
+    st.markdown("""
+    **Application Developer**  
+    Created by: **Mina BH Arsanious**
+    """)
+
 # Footer with instructions
 st.markdown("---")
+st.markdown("### Instructions")
 st.markdown("""
-**Instructions:**
 - Use the sidebar sliders to adjust parameters `a` and `b` in real-time
 - Choose different initial curve types (Circle, Lines, Ellipse) to see how they evolve
 - Adjust curve parameters to change the shape and position of the initial curve

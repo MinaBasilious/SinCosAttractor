@@ -1,8 +1,12 @@
-# Dynamical System Visualizer
+# Simone Attractor Visualizer
 
 ## Overview
 
-This is a Streamlit web application that visualizes an interactive dynamical system using mathematical equations. The application displays a specific 2D dynamical system with user-controllable parameters and creates visualizations using Plotly for interactive plotting.
+This is a Streamlit web application that visualizes the Simone attractor, a dynamical system inspired by Simone Conradi. The application displays curve evolution through the 2D dynamical system with user-controllable parameters and creates interactive visualizations using Plotly. 
+
+**Credits:**
+- **Simone Attractor**: Inspired by Simone Conradi (Reference: [Paul Bourke - Simone Orbits](https://paulbourke.net/fractals/simone_orbits/))
+- **Application Developer**: Mina BH Arsanious
 
 ## User Preferences
 
