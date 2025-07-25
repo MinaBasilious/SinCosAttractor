@@ -119,5 +119,4 @@ You can install dependencies using either **poetry** (recommended if you’re us
 
 This project is released under the MIT License. See [LICENSE](LICENSE) for details.
 
-```
 
