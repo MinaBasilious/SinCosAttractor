@@ -48,31 +48,42 @@ Users choose an initial curve (circle, line, ellipse, etc.), set parameters \$a\
 
 ## 💻 Installation & Local Run
 
-1. **Clone the repo**
+You can install dependencies using either **poetry** (recommended if you’re using `pyproject.toml`) or **pip** (by exporting a requirements file).
+
+**Option 1: Install via Poetry**
+
+1. Install Poetry (if you don’t have it):
 
    ```bash
-   git clone https://github.com/<your-username>/SinCosAttractor.git
+   pip install poetry
+   ```
+2. Install project dependencies:
+
+   ```bash
    cd SinCosAttractor
+   poetry install
+   ```
+3. Run the app:
+
+   ```bash
+   poetry run streamlit run app.py
    ```
 
-2. **Install dependencies**
+**Option 2: Generate and install with pip**
+
+1. Generate a `requirements.txt` from your lock file:
+
+   ```bash
+   cd SinCosAttractor
+   pip install pip-tools            # if you don’t have pip-tools
+   pip-compile --output-file=requirements.txt pyproject.toml
+   ```
+2. Install dependencies with pip:
 
    ```bash
    pip install -r requirements.txt
    ```
-
-3. **Configure Streamlit** (optional but recommended for cloud)
-   Create `./.streamlit/config.toml` with:
-
-   ```toml
-   [server]
-   headless = true
-   enableCORS = false
-   port = $PORT
-   address = "0.0.0.0"
-   ```
-
-4. **Run locally**
+3. Run the app:
 
    ```bash
    streamlit run app.py
@@ -88,15 +99,6 @@ Users choose an initial curve (circle, line, ellipse, etc.), set parameters \$a\
   2. Connect your repo at [https://streamlit.io/cloud](https://streamlit.io/cloud).
   3. Set main file to `app.py` and deploy.
 
-* **Heroku**
-
-  1. Add a `Procfile`:
-
-     ```Procfile
-     web: streamlit run app.py --server.port $PORT --server.address 0.0.0.0
-     ```
-  2. `pip freeze > requirements.txt`
-  3. `git push heroku main`
 
 > **Note:** GitHub Pages only serves static files—you’ll need a Python‑capable host for a live Streamlit app.
 
