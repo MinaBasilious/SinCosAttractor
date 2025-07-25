@@ -48,30 +48,62 @@ b = st.sidebar.slider(
     help="Adjusts the second equation: cos(2xy+b)"
 )
 
-st.sidebar.header("Initial Conditions")
+st.sidebar.header("Initial Curve Settings")
 
-# Initial conditions
-x0 = st.sidebar.number_input(
-    "Initial x₀", 
-    value=0.1, 
-    step=0.1,
-    help="Starting x coordinate"
+# Curve type selection
+curve_type = st.sidebar.selectbox(
+    "Initial curve type",
+    ["Circle", "Horizontal Line", "Vertical Line", "Diagonal Line", "Ellipse"],
+    help="Choose the type of initial curve to iterate"
 )
 
-y0 = st.sidebar.number_input(
-    "Initial y₀", 
-    value=0.1, 
-    step=0.1,
-    help="Starting y coordinate"
+# Initialize default values for all curve parameters
+center_x = center_y = radius = 0.0
+line_y = line_x = line_start = line_end = 0.0
+line_start_x = line_start_y = line_end_x = line_end_y = 0.0
+radius_x = radius_y = 0.0
+
+# Curve parameters
+if curve_type == "Circle":
+    center_x = st.sidebar.number_input("Circle center x", value=0.0, step=0.1)
+    center_y = st.sidebar.number_input("Circle center y", value=0.0, step=0.1)
+    radius = st.sidebar.number_input("Circle radius", value=0.5, min_value=0.1, step=0.1)
+elif curve_type == "Horizontal Line":
+    line_y = st.sidebar.number_input("Line y-coordinate", value=0.0, step=0.1)
+    line_start = st.sidebar.number_input("Line start x", value=-1.0, step=0.1)
+    line_end = st.sidebar.number_input("Line end x", value=1.0, step=0.1)
+elif curve_type == "Vertical Line":
+    line_x = st.sidebar.number_input("Line x-coordinate", value=0.0, step=0.1)
+    line_start = st.sidebar.number_input("Line start y", value=-1.0, step=0.1)
+    line_end = st.sidebar.number_input("Line end y", value=1.0, step=0.1)
+elif curve_type == "Diagonal Line":
+    line_start_x = st.sidebar.number_input("Start x", value=-1.0, step=0.1)
+    line_start_y = st.sidebar.number_input("Start y", value=-1.0, step=0.1)
+    line_end_x = st.sidebar.number_input("End x", value=1.0, step=0.1)
+    line_end_y = st.sidebar.number_input("End y", value=1.0, step=0.1)
+elif curve_type == "Ellipse":
+    center_x = st.sidebar.number_input("Ellipse center x", value=0.0, step=0.1)
+    center_y = st.sidebar.number_input("Ellipse center y", value=0.0, step=0.1)
+    radius_x = st.sidebar.number_input("Ellipse radius x", value=0.8, min_value=0.1, step=0.1)
+    radius_y = st.sidebar.number_input("Ellipse radius y", value=0.4, min_value=0.1, step=0.1)
+
+# Number of points on the curve
+n_points = st.sidebar.slider(
+    "Points on curve", 
+    min_value=20, 
+    max_value=200, 
+    value=50, 
+    step=10,
+    help="Number of points to sample along the initial curve"
 )
 
 # Number of iterations
 n_iterations = st.sidebar.slider(
     "Number of iterations", 
-    min_value=10, 
-    max_value=1000, 
-    value=100, 
-    step=10,
+    min_value=1, 
+    max_value=20, 
+    value=5, 
+    step=1,
     help="How many iterations to compute and display"
 )
 
@@ -79,143 +111,240 @@ n_iterations = st.sidebar.slider(
 if st.sidebar.button("Reset to Default Values"):
     st.rerun()
 
-def compute_trajectory(x0, y0, a, b, n_iterations):
+def generate_initial_curve(curve_type, n_points, **kwargs):
     """
-    Compute the trajectory of the dynamical system.
+    Generate points along the initial curve.
     
     Parameters:
-    x0, y0: Initial conditions
-    a, b: System parameters
-    n_iterations: Number of iterations to compute
+    curve_type: Type of curve to generate
+    n_points: Number of points on the curve
+    **kwargs: Additional parameters specific to each curve type
     
     Returns:
-    x_values, y_values: Arrays of x and y coordinates over time
+    x_curve, y_curve: Arrays of x and y coordinates of the initial curve
     """
-    x_values = np.zeros(n_iterations + 1)
-    y_values = np.zeros(n_iterations + 1)
-    
-    # Set initial conditions
-    x_values[0] = x0
-    y_values[0] = y0
-    
-    # Iterate through the system
-    for n in range(n_iterations):
-        x_n = x_values[n]
-        y_n = y_values[n]
+    if curve_type == "Circle":
+        center_x = kwargs.get('center_x', 0.0)
+        center_y = kwargs.get('center_y', 0.0)
+        radius = kwargs.get('radius', 0.5)
+        t = np.linspace(0, 2*np.pi, n_points)
+        x_curve = center_x + radius * np.cos(t)
+        y_curve = center_y + radius * np.sin(t)
         
-        # Apply the dynamical system equations
-        x_values[n + 1] = math.sin(x_n**2 - y_n**2 + a)
-        y_values[n + 1] = math.cos(2 * x_n * y_n + b)
+    elif curve_type == "Horizontal Line":
+        line_y = kwargs.get('line_y', 0.0)
+        line_start = kwargs.get('line_start', -1.0)
+        line_end = kwargs.get('line_end', 1.0)
+        x_curve = np.linspace(line_start, line_end, n_points)
+        y_curve = np.full(n_points, line_y)
+        
+    elif curve_type == "Vertical Line":
+        line_x = kwargs.get('line_x', 0.0)
+        line_start = kwargs.get('line_start', -1.0)
+        line_end = kwargs.get('line_end', 1.0)
+        x_curve = np.full(n_points, line_x)
+        y_curve = np.linspace(line_start, line_end, n_points)
+        
+    elif curve_type == "Diagonal Line":
+        line_start_x = kwargs.get('line_start_x', -1.0)
+        line_start_y = kwargs.get('line_start_y', -1.0)
+        line_end_x = kwargs.get('line_end_x', 1.0)
+        line_end_y = kwargs.get('line_end_y', 1.0)
+        x_curve = np.linspace(line_start_x, line_end_x, n_points)
+        y_curve = np.linspace(line_start_y, line_end_y, n_points)
+        
+    elif curve_type == "Ellipse":
+        center_x = kwargs.get('center_x', 0.0)
+        center_y = kwargs.get('center_y', 0.0)
+        radius_x = kwargs.get('radius_x', 0.8)
+        radius_y = kwargs.get('radius_y', 0.4)
+        t = np.linspace(0, 2*np.pi, n_points)
+        x_curve = center_x + radius_x * np.cos(t)
+        y_curve = center_y + radius_y * np.sin(t)
+    else:
+        # Default fallback - create a small circle
+        t = np.linspace(0, 2*np.pi, n_points)
+        x_curve = 0.5 * np.cos(t)
+        y_curve = 0.5 * np.sin(t)
     
-    return x_values, y_values
+    return x_curve, y_curve
 
-# Compute trajectory
+def iterate_curve(x_curve, y_curve, a, b, n_iterations):
+    """
+    Apply the dynamical system to all points on a curve for multiple iterations.
+    
+    Parameters:
+    x_curve, y_curve: Initial curve points
+    a, b: System parameters
+    n_iterations: Number of iterations to apply
+    
+    Returns:
+    curves: List of (x_values, y_values) for each iteration
+    """
+    curves = [(x_curve.copy(), y_curve.copy())]  # Store initial curve
+    
+    current_x = x_curve.copy()
+    current_y = y_curve.copy()
+    
+    for iteration in range(n_iterations):
+        # Apply the dynamical system to each point
+        new_x = np.sin(current_x**2 - current_y**2 + a)
+        new_y = np.cos(2 * current_x * current_y + b)
+        
+        current_x = new_x
+        current_y = new_y
+        
+        curves.append((current_x.copy(), current_y.copy()))
+    
+    return curves
+
+# Generate initial curve and compute iterations
 try:
-    x_trajectory, y_trajectory = compute_trajectory(x0, y0, a, b, n_iterations)
+    # Gather curve parameters based on type
+    curve_params = {}
+    if curve_type == "Circle":
+        curve_params = {'center_x': center_x, 'center_y': center_y, 'radius': radius}
+    elif curve_type == "Horizontal Line":
+        curve_params = {'line_y': line_y, 'line_start': line_start, 'line_end': line_end}
+    elif curve_type == "Vertical Line":
+        curve_params = {'line_x': line_x, 'line_start': line_start, 'line_end': line_end}
+    elif curve_type == "Diagonal Line":
+        curve_params = {'line_start_x': line_start_x, 'line_start_y': line_start_y, 
+                       'line_end_x': line_end_x, 'line_end_y': line_end_y}
+    elif curve_type == "Ellipse":
+        curve_params = {'center_x': center_x, 'center_y': center_y, 
+                       'radius_x': radius_x, 'radius_y': radius_y}
     
-    # Create two columns for plots
-    col1, col2 = st.columns(2)
+    # Generate initial curve
+    initial_x, initial_y = generate_initial_curve(curve_type, n_points, **curve_params)
     
-    with col1:
-        st.subheader("Phase Space Trajectory")
-        
-        # Create trajectory plot
-        fig_trajectory = go.Figure()
-        
-        # Add trajectory line
-        fig_trajectory.add_trace(go.Scatter(
-            x=x_trajectory,
-            y=y_trajectory,
+    # Compute all curve iterations
+    all_curves = iterate_curve(initial_x, initial_y, a, b, n_iterations)
+    
+    # Create main visualization
+    st.subheader("Curve Evolution Through Dynamical System")
+    
+    # Create the main plot
+    fig = go.Figure()
+    
+    # Color palette for different iterations
+    colors = px.colors.qualitative.Set3[:n_iterations+1]
+    if len(colors) < n_iterations + 1:
+        colors = colors * ((n_iterations + 1) // len(colors) + 1)
+    
+    # Add each iteration as a separate trace
+    for i, (x_curve, y_curve) in enumerate(all_curves):
+        fig.add_trace(go.Scatter(
+            x=x_curve,
+            y=y_curve,
             mode='lines+markers',
-            name='Trajectory',
-            line=dict(color='blue', width=2),
-            marker=dict(size=3, color='blue'),
-            hovertemplate='x: %{x:.4f}<br>y: %{y:.4f}<extra></extra>'
+            name=f'Iteration {i}',
+            line=dict(color=colors[i], width=2 if i == 0 else 1.5),
+            marker=dict(size=3 if i == 0 else 2),
+            opacity=1.0 if i == 0 else 0.8,
+            hovertemplate=f'Iteration {i}<br>x: %{{x:.4f}}<br>y: %{{y:.4f}}<extra></extra>'
         ))
+    
+    fig.update_layout(
+        xaxis_title="x",
+        yaxis_title="y",
+        showlegend=True,
+        height=600,
+        hovermode='closest',
+        title=f"Evolution of {curve_type} through {n_iterations} iterations"
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Create animated view option
+    if st.checkbox("Show Animation", help="Animate the curve evolution step by step"):
+        st.subheader("Animated Evolution")
         
-        # Highlight starting point
-        fig_trajectory.add_trace(go.Scatter(
-            x=[x0],
-            y=[y0],
-            mode='markers',
-            name='Start',
-            marker=dict(size=10, color='green', symbol='star'),
-            hovertemplate='Start: (%{x:.4f}, %{y:.4f})<extra></extra>'
-        ))
+        # Create frames for animation
+        frames = []
+        for i in range(len(all_curves)):
+            frame_data = []
+            for j in range(i + 1):
+                x_curve, y_curve = all_curves[j]
+                frame_data.append(go.Scatter(
+                    x=x_curve,
+                    y=y_curve,
+                    mode='lines+markers',
+                    name=f'Iteration {j}',
+                    line=dict(color=colors[j], width=2 if j == 0 else 1.5),
+                    marker=dict(size=3 if j == 0 else 2),
+                    opacity=1.0 if j == i else 0.5
+                ))
+            frames.append(go.Frame(data=frame_data, name=str(i)))
         
-        # Highlight ending point
-        fig_trajectory.add_trace(go.Scatter(
-            x=[x_trajectory[-1]],
-            y=[y_trajectory[-1]],
-            mode='markers',
-            name='End',
-            marker=dict(size=10, color='red', symbol='x'),
-            hovertemplate='End: (%{x:.4f}, %{y:.4f})<extra></extra>'
-        ))
+        # Create initial figure for animation
+        fig_anim = go.Figure(
+            data=frames[0].data,
+            frames=frames
+        )
         
-        fig_trajectory.update_layout(
+        # Add animation controls
+        fig_anim.update_layout(
             xaxis_title="x",
             yaxis_title="y",
-            showlegend=True,
-            height=400,
-            hovermode='closest'
+            height=500,
+            updatemenus=[{
+                "buttons": [
+                    {
+                        "args": [None, {"frame": {"duration": 800, "redraw": True},
+                                      "fromcurrent": True, "transition": {"duration": 300}}],
+                        "label": "Play",
+                        "method": "animate"
+                    },
+                    {
+                        "args": [[None], {"frame": {"duration": 0, "redraw": True},
+                                        "mode": "immediate", "transition": {"duration": 0}}],
+                        "label": "Pause",
+                        "method": "animate"
+                    }
+                ],
+                "direction": "left",
+                "pad": {"r": 10, "t": 87},
+                "showactive": False,
+                "type": "buttons",
+                "x": 0.1,
+                "xanchor": "right",
+                "y": 0,
+                "yanchor": "top"
+            }],
+            sliders=[{
+                "active": 0,
+                "yanchor": "top",
+                "xanchor": "left",
+                "currentvalue": {
+                    "font": {"size": 20},
+                    "prefix": "Iteration:",
+                    "visible": True,
+                    "xanchor": "right"
+                },
+                "transition": {"duration": 300, "easing": "cubic-in-out"},
+                "pad": {"b": 10, "t": 50},
+                "len": 0.9,
+                "x": 0.1,
+                "y": 0,
+                "steps": [
+                    {
+                        "args": [[f.name], {
+                            "frame": {"duration": 300, "redraw": True},
+                            "mode": "immediate",
+                            "transition": {"duration": 300}
+                        }],
+                        "label": str(k),
+                        "method": "animate"
+                    }
+                    for k, f in enumerate(frames)
+                ]
+            }]
         )
         
-        st.plotly_chart(fig_trajectory, use_container_width=True)
+        st.plotly_chart(fig_anim, use_container_width=True)
     
-    with col2:
-        st.subheader("Time Series")
-        
-        # Create time series plot
-        iterations = np.arange(n_iterations + 1)
-        
-        fig_timeseries = make_subplots(
-            rows=2, cols=1,
-            subplot_titles=('x(n) vs iteration', 'y(n) vs iteration'),
-            vertical_spacing=0.12
-        )
-        
-        # Add x time series
-        fig_timeseries.add_trace(
-            go.Scatter(
-                x=iterations,
-                y=x_trajectory,
-                mode='lines+markers',
-                name='x(n)',
-                line=dict(color='blue', width=2),
-                marker=dict(size=3),
-                hovertemplate='Iteration: %{x}<br>x: %{y:.4f}<extra></extra>'
-            ),
-            row=1, col=1
-        )
-        
-        # Add y time series
-        fig_timeseries.add_trace(
-            go.Scatter(
-                x=iterations,
-                y=y_trajectory,
-                mode='lines+markers',
-                name='y(n)',
-                line=dict(color='red', width=2),
-                marker=dict(size=3),
-                hovertemplate='Iteration: %{x}<br>y: %{y:.4f}<extra></extra>'
-            ),
-            row=2, col=1
-        )
-        
-        fig_timeseries.update_layout(
-            height=400,
-            showlegend=True,
-            hovermode='x unified'
-        )
-        
-        fig_timeseries.update_xaxes(title_text="Iteration", row=2, col=1)
-        fig_timeseries.update_yaxes(title_text="x", row=1, col=1)
-        fig_timeseries.update_yaxes(title_text="y", row=2, col=1)
-        
-        st.plotly_chart(fig_timeseries, use_container_width=True)
-    
-    # Display current parameter values and statistics
+    # Display system information
     st.subheader("System Information")
     
     col1, col2, col3, col4 = st.columns(4)
@@ -227,30 +356,40 @@ try:
         st.metric("Parameter b", f"{b:.2f}")
     
     with col3:
-        st.metric("Final x", f"{x_trajectory[-1]:.4f}")
-    
+        st.metric("Curve Type", curve_type)
+        
     with col4:
-        st.metric("Final y", f"{y_trajectory[-1]:.4f}")
+        st.metric("Points on Curve", n_points)
     
-    # Additional analysis
-    st.subheader("Trajectory Analysis")
+    # Analysis of curve deformation
+    st.subheader("Curve Analysis")
     
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        # Calculate trajectory length
-        distances = np.sqrt(np.diff(x_trajectory)**2 + np.diff(y_trajectory)**2)
-        total_length = np.sum(distances)
-        st.metric("Total Path Length", f"{total_length:.4f}")
+        # Calculate total area covered by all iterations
+        all_x = np.concatenate([curve[0] for curve in all_curves])
+        all_y = np.concatenate([curve[1] for curve in all_curves])
+        x_span = np.max(all_x) - np.min(all_x)
+        y_span = np.max(all_y) - np.min(all_y)
+        st.metric("Total X Span", f"{x_span:.4f}")
     
     with col2:
-        # Calculate bounding box
-        x_range = np.max(x_trajectory) - np.min(x_trajectory)
-        y_range = np.max(y_trajectory) - np.min(y_trajectory)
-        st.metric("X Range", f"{x_range:.4f}")
+        st.metric("Total Y Span", f"{y_span:.4f}")
     
     with col3:
-        st.metric("Y Range", f"{y_range:.4f}")
+        # Calculate how much the curve has "spread" from initial to final
+        initial_x_span = np.max(initial_x) - np.min(initial_x)
+        initial_y_span = np.max(initial_y) - np.min(initial_y)
+        final_x, final_y = all_curves[-1]
+        final_x_span = np.max(final_x) - np.min(final_x)
+        final_y_span = np.max(final_y) - np.min(final_y)
+        
+        if initial_x_span > 0 and initial_y_span > 0:
+            expansion_factor = ((final_x_span / initial_x_span) + (final_y_span / initial_y_span)) / 2
+            st.metric("Expansion Factor", f"{expansion_factor:.2f}x")
+        else:
+            st.metric("Expansion Factor", "N/A")
     
     # Show current equations with parameter values
     st.subheader("Current System Equations")
@@ -260,40 +399,20 @@ try:
     y_{{n+1}} = \\cos\\bigl(2\\,x_n y_n + {b}\\bigr)
     \\end{{cases}}
     """)
-    
-    # Optionally show raw data
-    if st.expander("Show Raw Data"):
-        import pandas as pd
-        
-        df = pd.DataFrame({
-            'Iteration': np.arange(n_iterations + 1),
-            'x': x_trajectory,
-            'y': y_trajectory
-        })
-        
-        st.dataframe(df, use_container_width=True)
-        
-        # Download button for data
-        csv = df.to_csv(index=False)
-        st.download_button(
-            label="Download trajectory data as CSV",
-            data=csv,
-            file_name=f"trajectory_a{a}_b{b}.csv",
-            mime="text/csv"
-        )
 
 except Exception as e:
-    st.error(f"An error occurred while computing the trajectory: {str(e)}")
-    st.info("Try adjusting the parameters or initial conditions.")
+    st.error(f"An error occurred while computing the curve evolution: {str(e)}")
+    st.info("Try adjusting the parameters, curve settings, or reducing the number of iterations.")
 
 # Footer with instructions
 st.markdown("---")
 st.markdown("""
 **Instructions:**
 - Use the sidebar sliders to adjust parameters `a` and `b` in real-time
-- Change initial conditions `x₀` and `y₀` to explore different starting points
-- Adjust the number of iterations to see longer or shorter trajectories
-- The left plot shows the trajectory in phase space (x vs y)
-- The right plot shows how x and y evolve over time
-- Hover over points to see exact values
+- Choose different initial curve types (Circle, Lines, Ellipse) to see how they evolve
+- Adjust curve parameters to change the shape and position of the initial curve
+- Change the number of iterations to see longer evolution sequences
+- Enable animation to see step-by-step curve transformation
+- Hover over points to see exact coordinate values
+- Each color represents a different iteration of the dynamical system
 """)
